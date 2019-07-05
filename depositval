@@ -1,0 +1,82 @@
+
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+
+/**
+ * Servlet implementation class DepositVal
+ */
+@WebServlet("/DepositVal")
+public class DepositVal extends HttpServlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public static boolean validate(String acc,double n,String lname){  
+		boolean status=false;
+		String uname="",tc="";
+		Connection con=null;
+		ResultSet rs=null,rs1=null,rs2=null;
+		Statement stmt=null;
+		try{  
+		Class.forName("oracle.jdbc.driver.OracleDriver");  
+		con = DriverManager.getConnection(  
+				"jdbc:oracle:thin:@192.168.1.5:1521:gdasdev","dams_freshers","dams_freshers");
+		//PreparedStatement ps=con.prepareStatement("select cusername,cpassword from A_USERS where cusername=? and usertype=?");  
+		//ps.setString(1,uname);  
+		//ps.setString(2,type);  
+		stmt=con.createStatement();
+		
+		rs=stmt.executeQuery("select USERNAME from ARAVIND_USERS where LOGINNAME = '"+lname+"' and status=1");  
+		while(rs.next()){
+			uname=rs.getString(1);
+			//userid=rs1.getString(2);
+			 tc=("transaction-by".concat(uname));
+		}
+		
+		rs1 = stmt.executeQuery("select balance from Aravind_bank where accountnumber= '"+acc+"' and status=1");   
+		if(rs1.next())
+		{
+			double pb=rs1.getDouble(1);
+			if(n<0)
+			{
+			status=false;
+			}
+			else
+			{
+			double balance =pb+n;
+			rs2= stmt.executeQuery("UPDATE ARAVIND_BANK  SET balance ="+balance+"  WHERE accountnumber = '"+acc+"' and status=1");
+			
+			String tt="credit ";
+	
+			 
+			 BankTransaction b=new BankTransaction();
+		       b.dtransaction(acc,n,pb,balance,tc,tt,uname,uname);
+		
+			status=rs2.next();
+			}
+		
+		
+		}
+		
+		          
+		}catch(Exception e){System.out.println(e);
+		}finally{
+			
+			if (con != null) {
+			        try {
+			            con.close();
+			        } catch (SQLException e) { /* ignored */}
+			    }
+		}
+
+		return status;  
+		}  
+}
