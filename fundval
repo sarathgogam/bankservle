@@ -1,0 +1,128 @@
+
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+
+/**
+ * Servlet implementation class FundVal
+ */
+@WebServlet("/FundVal")
+public class FundVal extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public FundVal() {
+        super();
+        // TODO Auto-generated constructor stub
+    }  
+        
+        public static boolean validate(String acc1,String acc2,double n,String lname){  
+    		boolean status=false;
+    		String suname="",rtc="",stc="";
+    		Connection con=null;
+    		ResultSet rs=null,rs1=null,rs3=null,rs4=null;;
+    		Statement stmt=null;
+    		String rusername="";
+    		try{  
+    		Class.forName("oracle.jdbc.driver.OracleDriver");  
+    		con = DriverManager.getConnection(  
+    				"jdbc:oracle:thin:@192.168.1.5:1521:gdasdev","dams_freshers","dams_freshers");
+    		//PreparedStatement ps=con.prepareStatement("select cusername,cpassword from A_USERS where cusername=? and usertype=?");  
+    		//ps.setString(1,uname);  
+    		//ps.setString(2,type);  
+    		stmt=con.createStatement();
+    	
+    		rs1 = stmt.executeQuery("select balance from Aravind_bank where accountnumber= '"+acc1+"' and status=1");   
+    		if(rs1.next())
+    		{
+    			double pb=rs1.getDouble(1);
+    			if(n>pb)
+    			{
+    			status=false;
+    			}
+    			else
+    			{
+    			double balance=pb-n;
+    			stmt.executeQuery("UPDATE ARAVIND_BANK  SET balance ="+balance+"  WHERE accountnumber = '"+acc1+"' and status=1");
+    			
+    			String stt="debit ";
+    	
+    			 
+    			 
+    		/*sender*/
+    				rs3=stmt.executeQuery("select userid,balance from ARAVIND_BANK where accountnumber = '"+acc2+"' and status=1");  
+    				if(rs3.next())
+    				{
+    					String id=rs3.getString(1);
+    					double rpb=rs3.getDouble(2);
+    					rs4=stmt.executeQuery("select username from ARAVIND_USERS where userid = '"+id+"' and status=1");  
+    			
+    					
+    					while(rs4.next())
+    					{
+    						rusername=rs4.getString(1); 
+    					}
+    						rs=stmt.executeQuery("select USERNAME from ARAVIND_USERS where LOGINNAME = '"+lname+"' and status=1");  
+    						while(rs.next()){
+    						suname=rs.getString(1);
+    						}
+    						 rtc=("received from ".concat(suname));			
+    						 stc=("send-to ".concat(rusername));
+    								
+    						
+    					
+    					double rbalance =rpb+n;
+    					rs4= stmt.executeQuery("UPDATE ARAVIND_BANK  SET balance ="+rbalance+"  WHERE accountnumber = '"+acc2+"' and status=1");
+    					
+    					String rtt="credit ";
+    			
+    					BankTransaction b=new BankTransaction();
+    				       b.dtransaction(acc1,n,pb,balance,stc,stt,suname,suname);
+
+       					BankTransaction b1=new BankTransaction();
+    				       b1.dtransaction(acc2,n,rpb,rbalance,rtc,rtt,suname,suname);
+    				
+    				}else{
+    					status=false;
+    				}
+    					
+    			
+    				
+    				
+    				
+    				
+    		       
+    		       status=true;
+    			}
+    		
+    		
+    		}
+    		
+    		          
+    		}catch(Exception e){System.out.println(e);
+    		}finally{
+    			
+    			if (con != null) {
+    			        try {
+    			            con.close();
+    			        } catch (SQLException e) { /* ignored */}
+    			    }
+    		}
+
+    		return status;  
+    		}  
+    	
+    	
+        
+        
+    
+
+}
